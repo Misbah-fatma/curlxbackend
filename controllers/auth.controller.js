@@ -44,6 +44,7 @@ export const login = async (req, res) => {
     }
 
     const user = await User.findOne({ email });
+    console.log(user)
     if (!user) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
@@ -53,22 +54,72 @@ export const login = async (req, res) => {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    const token = jwt.sign(
-      { id: user._id },
-      process.env.JWT_SECRET,
-      { expiresIn: "1d" }
-    );
+const token = jwt.sign(
+  {
+    id: user._id,
+    name: user.name,
+    role: user.role,
+  },
+  process.env.JWT_SECRET,
+  { expiresIn: "1d" }
+);
 
-    res.json({
-      token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-      },
-    });
+res.json({
+  token,
+  user: {
+    id: user._id,
+    name: user.name,
+    email: user.email,
+    role: user.role, 
+  },
+});
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });
   }
 };
+
+export const updateProfile = async (req, res) => {
+  try {
+    const { name, phone, addresses } = req.body;
+
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // update fields
+    if (name) user.name = name;
+    if (phone) user.phone = phone;
+    if (Array.isArray(addresses)) user.addresses = addresses;
+
+    await user.save();
+
+    res.json({
+      message: "Profile updated successfully",
+      user: {
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        addresses: user.addresses,
+      },
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Profile update failed" });
+  }
+};
+
+export const getProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select("-password");
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json(user); // includes addresses
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+

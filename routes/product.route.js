@@ -81,9 +81,7 @@ router.get("/", async (req, res) => {
 
 router.get("/count", async (req, res) => {
   try {
-    console.log("Received request for product count");
     const count = await Product.countDocuments();
-    console.log("Product count:", count); 
     res.json({ count });
 
   } catch (err) {
@@ -102,8 +100,28 @@ router.get("/:id", async (req, res) => {
   }
 });
 
+router.put("/update/:id", authMiddleware, async (req, res) => {
+  try {
+    const updated = await Product.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
+    res.json(updated);
+  } catch (err) {
+    res.status(500).json({ message: "Update failed" });
+  }
+});
 
-
+/* DELETE PRODUCT */
+router.delete("/delete/:id", authMiddleware, async (req, res) => {
+  try {
+    await Product.findByIdAndDelete(req.params.id);
+    res.json({ message: "Product deleted" });
+  } catch (err) {
+    res.status(500).json({ message: "Delete failed" });
+  }
+});
 
 export default router;
 

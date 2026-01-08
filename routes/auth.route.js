@@ -1,16 +1,18 @@
 import express from "express";
-import { register, login } from "../controllers/auth.controller.js";
+import { register, login, updateProfile,getProfile } from "../controllers/auth.controller.js";
 import User from "../models/User.js";
+import auth from '../middlewares/auth.middleware.js';
 
 const router = express.Router();
 
 router.post("/register", register);
 router.post("/login", login);
+router.put("/profile", auth, updateProfile);
+router.get("/profile", auth, getProfile);
 
 router.get("/count", async (req, res) => {
   try {
     const count = await User.countDocuments();
-    console.log("User count:", count);
     res.json({ count });
   } catch (err) {
     console.error(err);

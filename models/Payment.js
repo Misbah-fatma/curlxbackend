@@ -21,7 +21,10 @@ const orderSchema = new mongoose.Schema(
       enum: ["pending", "paid", "rejected"],
       default: "pending",
     },
-
+    paymentId: {
+      type: String,
+      required: true,
+    },
     transactionRef: String, // tx hash / note / screenshot name
   },
   { timestamps: true }

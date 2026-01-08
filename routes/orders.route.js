@@ -1,8 +1,9 @@
 // routes/order.routes.js
 import express from 'express';
 import Orders from '../models/Payment.js';
-import Product from '../models/Product.js';
+import { sendOrderEmail } from '../config/sendEmails.js';
 import auth from '../middlewares/auth.middleware.js';
+import User from "../models/User.js";
 
 const router = express.Router();
 
@@ -11,22 +12,58 @@ const router = express.Router();
  */
 router.post("/checkout", auth, async (req, res) => {
   try {
-    const { items, amount, paymentMethod } = req.body;
+    const { items, amount, paymentMethod, paymentId, addressId } = req.body;
 
     if (!items || items.length === 0)
       return res.status(400).json({ message: "Cart is empty" });
-    console.log("esdwed", req.user)
 
+    if (!paymentId)
+      return res.status(400).json({ message: "Payment ID is required" });
+
+    // 1️⃣ Fetch user
+    const user = await User.findById(req.user.id);
+
+    if (!user)
+      return res.status(404).json({ message: "User not found" });
+
+    // 2️⃣ Select address
+    let selectedAddress;
+
+    if (addressId) {
+      selectedAddress = user.addresses.id(addressId);
+    } else {
+      selectedAddress = user.addresses[0]; // fallback
+    }
+
+    if (!selectedAddress)
+      return res.status(400).json({ message: "Address not found" });
+
+    // 3️⃣ Create order
     const order = await Orders.create({
-      userId: req.user,
-      items,           // store all cart items
-      amount,          // total amount
+      userId: user._id,
+      items,
+      amount,
       paymentMethod,
+      paymentId,
+      address: selectedAddress,
       status: "PENDING_VERIFICATION",
     });
 
+    // 4️⃣ Send email
+    await sendOrderEmail({
+      user: {
+        name: user.name,
+        email: user.email,
+      },
+      items,
+      amount,
+      paymentMethod,
+      paymentId,
+      address: selectedAddress,
+    });
+
     res.status(201).json({
-      message: "Order created",
+      message: "Order created & email sent",
       order,
     });
   } catch (err) {
@@ -34,6 +71,7 @@ router.post("/checkout", auth, async (req, res) => {
     res.status(500).json({ message: "Checkout failed" });
   }
 });
+
 
 /**
  * CONFIRM PAYMENT (manual)
