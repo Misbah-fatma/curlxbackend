@@ -25,6 +25,15 @@ sections: [
   },
 ],
 
+rating: {
+  type: Number,
+  default: 0,
+},
+numReviews: {
+  type: Number,
+  default: 0,
+},
+
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
       image: { type: String },
 }, { timestamps: true });

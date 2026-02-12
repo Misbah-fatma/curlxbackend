@@ -10,7 +10,7 @@ router.post("/login", login);
 router.put("/profile", auth, updateProfile);
 router.get("/profile", auth, getProfile);
 
-router.get("/count", async (req, res) => {
+router.get("/count",auth, async (req, res) => {
   try {
     const count = await User.countDocuments();
     res.json({ count });
@@ -20,7 +20,7 @@ router.get("/count", async (req, res) => {
   }
 });
 
-router.get("/users", async (req, res) => {
+router.get("/users", auth, async (req, res) => {
   try {
     const users = await User.find().sort({ createdAt: -1 });
     res.json(users);

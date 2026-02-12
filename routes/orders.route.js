@@ -49,7 +49,6 @@ router.post("/checkout", auth, async (req, res) => {
       status: "PENDING_VERIFICATION",
     });
 
-    // 4️⃣ Send email
     await sendOrderEmail({
       user: {
         name: user.name,

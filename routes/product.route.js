@@ -1,7 +1,6 @@
 import express from 'express';
 import auth from '../middlewares/auth.middleware.js';
 import Product from '../models/Product.js';
-import authMiddleware from "../middlewares/auth.middleware.js";
 import multer from "multer";
 import cloudinary from "../config/cloudinary.js";
 import streamifier from "streamifier";
@@ -13,7 +12,7 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
 // POST a new product with Cloudinary image
-router.post("/", upload.single("image"), async (req, res) => {
+router.post("/", auth, upload.single("image"), async (req, res) => {
   try {
     const { name, category, price, quantity, description, medicineType, sections } = req.body;
 
@@ -79,7 +78,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.get("/count", async (req, res) => {
+router.get("/count", auth, async (req, res) => {
   try {
     const count = await Product.countDocuments();
     res.json({ count });
@@ -90,7 +89,7 @@ router.get("/count", async (req, res) => {
   }
 });
 
-router.get("/:id", async (req, res) => {
+router.get("/:id", auth, async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
     if (!product) return res.status(404).json({ message: "Not found" });
@@ -100,7 +99,7 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-router.put("/update/:id", authMiddleware, async (req, res) => {
+router.put("/update/:id", auth, async (req, res) => {
   try {
     const updated = await Product.findByIdAndUpdate(
       req.params.id,
@@ -114,7 +113,7 @@ router.put("/update/:id", authMiddleware, async (req, res) => {
 });
 
 /* DELETE PRODUCT */
-router.delete("/delete/:id", authMiddleware, async (req, res) => {
+router.delete("/delete/:id", auth, async (req, res) => {
   try {
     await Product.findByIdAndDelete(req.params.id);
     res.json({ message: "Product deleted" });
